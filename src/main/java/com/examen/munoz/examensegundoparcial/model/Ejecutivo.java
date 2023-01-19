@@ -20,6 +20,7 @@ public class Ejecutivo {
     private String codigoUsuarioEjecutivo;
     private String nombreCompleto;
     private Integer numeroEscritorioAsignado;
+    private Boolean asignado;
 
     @Version
     private Long version;

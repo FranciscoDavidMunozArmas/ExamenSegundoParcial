@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.examen.munoz.examensegundoparcial.controller.dto.RSCliente;
+import com.examen.munoz.examensegundoparcial.controller.mapper.ClienteMapper;
 import com.examen.munoz.examensegundoparcial.error.CustomRuntimeException;
 import com.examen.munoz.examensegundoparcial.model.Cliente;
 import com.examen.munoz.examensegundoparcial.service.ClienteService;
@@ -22,11 +24,12 @@ public class ClienteController {
     }
 
     @GetMapping("/{cedula}")
-    public ResponseEntity<Cliente> buscarCliente(
+    public ResponseEntity<RSCliente> buscarCliente(
             @PathVariable("cedula") String cedula) {
         try {
             Cliente cliente = this.clienteService.buscarCliente(cedula);
-            return ResponseEntity.ok(cliente);
+            RSCliente response = ClienteMapper.map(cliente);
+            return ResponseEntity.ok(response);
         } catch (CustomRuntimeException e) {
             return ResponseEntity.status(e.code).build();
         } catch (Exception e) {

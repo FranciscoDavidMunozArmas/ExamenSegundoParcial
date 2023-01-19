@@ -7,6 +7,7 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 
 import com.examen.munoz.examensegundoparcial.error.CustomRuntimeException;
+import com.examen.munoz.examensegundoparcial.model.Ejecutivo;
 import com.examen.munoz.examensegundoparcial.model.Turno;
 import com.examen.munoz.examensegundoparcial.repository.EjecutivoRepository;
 import com.examen.munoz.examensegundoparcial.repository.TurnoRepository;
@@ -27,24 +28,42 @@ public class TurnoService {
 
     public Integer crearTurno(String cedulaCliente, String nombreCompletoCliente) {
         List<Turno> turnos = this.turnoRepository.findAll();
-        Turno turno = Turno.builder()
-                .cedulaCliente(cedulaCliente)
-                .nombreCliente(nombreCompletoCliente)
-                .fechaHoraGeneracion(LocalDateTime.now())
-                // Ejecutivo
-                .numeroTurno(turnos.size() > 0 ? turnos.size() + 1 : 1)
-                .build();
-        return turno.getNumeroTurno();
+        List<Ejecutivo> ejecutivos = this.ejecutivoRepository.findByAsignado(false);
+        if (ejecutivos.size() > 0) {
+            try {
+                Ejecutivo ejecutivo = ejecutivos.get(0);
+                ejecutivo.setAsignado(true);
+                Turno turno = Turno.builder()
+                        .cedulaCliente(cedulaCliente)
+                        .nombreCliente(nombreCompletoCliente)
+                        .fechaHoraGeneracion(LocalDateTime.now())
+                        .codigoUsuarioEjecutivo(ejecutivo.getCodigoUsuarioEjecutivo())
+                        .numeroTurno(turnos.size() > 0 ? turnos.size() + 1 : 1)
+                        .build();
+                this.turnoRepository.save(turno);
+                this.ejecutivoRepository.save(ejecutivo);
+                return turno.getNumeroTurno();
+            } catch (Exception e) {
+                throw new CustomRuntimeException("Ha ocurrido un error", ResponseCodeUtils.INTERNAL_ERROR_SERVER.code);
+            }
+        } else {
+            throw new CustomRuntimeException("Ejecutivos no disponibles", ResponseCodeUtils.NOT_FOUND.code);
+        }
+
     }
 
     public void registrarAtencion(Integer numeroTurno, String codigoUsuarioEjecutivo) {
         Optional<Turno> optional = this.turnoRepository.findByNumeroTurnoAndCodigoUsuarioEjecutivo(numeroTurno,
                 codigoUsuarioEjecutivo);
-        if (optional.isPresent()) {
+        Optional<Ejecutivo> optEjecutivo = this.ejecutivoRepository.findById(codigoUsuarioEjecutivo);
+        if (optional.isPresent() && optEjecutivo.isPresent()) {
             Turno turno = optional.get();
             turno.setFechaHoraInicioAtencion(LocalDateTime.now());
+            Ejecutivo ejecutivo = optEjecutivo.get();
+            ejecutivo.setAsignado(false);
             try {
                 this.turnoRepository.save(turno);
+                this.ejecutivoRepository.save(ejecutivo);
             } catch (Exception e) {
                 throw new CustomRuntimeException("Ha ocurrido un error", ResponseCodeUtils.INTERNAL_ERROR_SERVER.code);
             }

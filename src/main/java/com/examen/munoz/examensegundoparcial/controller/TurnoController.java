@@ -30,8 +30,8 @@ public class TurnoController {
     public ResponseEntity<RSTurno> crearTurno(
             @RequestBody RQGeneracionTurno rqGeneracionTurno) {
         try {
-            Integer turno = this.turnoService.crearTurno(rqGeneracionTurno.getCedulaCliente(),
-                    rqGeneracionTurno.getNombre() + rqGeneracionTurno.getApellidos());
+            Integer turno = this.turnoService.crearTurno(rqGeneracionTurno.getCedula(),
+                    rqGeneracionTurno.getNombreCompleto());
             return ResponseEntity.ok(TurnoMapper.map(turno));
         } catch (CustomRuntimeException e) {
             return ResponseEntity.status(e.code).build();
@@ -44,6 +44,9 @@ public class TurnoController {
     public ResponseEntity registrarAtencion(
             @PathVariable("turno") Integer turnoInteger,
             @RequestBody RQCalificacion rqCalificacion) {
+        if (rqCalificacion.getCalificacion() > 5 || rqCalificacion.getCalificacion() < 1) {
+            return ResponseEntity.status(500).build();
+        }
         try {
             this.turnoService.calificar(rqCalificacion.getCedulaCliente(), turnoInteger,
                     rqCalificacion.getCalificacion());
