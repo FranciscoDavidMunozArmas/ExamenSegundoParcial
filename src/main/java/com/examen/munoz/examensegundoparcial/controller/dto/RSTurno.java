@@ -7,9 +7,6 @@ import lombok.Data;
 
 @Builder
 @Data
-public class RSSample implements Serializable {
-    
-    private String lastname;
-    private String name;
-    
+public class RSTurno implements Serializable {
+    Integer turno;
 }
